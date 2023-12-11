@@ -9,3 +9,8 @@ python -m venv venv
 source ./venv/Scripts/activate
 pip install -r requirements.txt
 ```
+
+# To run web app
+```
+python app.py
+```
