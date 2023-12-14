@@ -36,7 +36,7 @@ question_elements = [
 app.layout = dbc.Container(
     [
         html.H1(
-            "Kas geriausiai atstovauja mano įsitikinimus Seime?",
+            "Kas geriausiai atstovauja mano įsitikinimams Seime?",
             className="text-center mb-4",
         ),
         # Generate 10 sections of question and buttons
