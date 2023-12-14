@@ -3,52 +3,65 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+app = Dash("opa", external_stylesheets=[dbc.themes.LUX])
 server = app.server
 
-df = pd.read_csv(
-    "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
-)
+question_elements = [
+    html.Div(
+        [
+            html.H6(f"Klausimas {_+1}", className="mt-3"),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dbc.Button("Už", color="success", className="me-1"),
+                        width="auto",
+                    ),
+                    dbc.Col(
+                        dbc.Button("Prieš", color="danger", className="me-1"),
+                        width="auto",
+                    ),
+                    dbc.Col(
+                        dbc.Button("Man nesvarbu", color="info", className="me-1"),
+                        width="auto",
+                    ),
+                ],
+                justify="center",
+                className="mb-2",
+            ),
+        ]
+    )
+    for _ in range(10)
+]
 
-# html.Div(children="Kuris Seimo narys mane atstovauja geriausiai?"),
-app.layout = html.Div(
+app.layout = dbc.Container(
     [
-        html.Div(
-            className="row",
-            children="Kuris Seimo narys mane atstovauja geriausiai?",
-            # style={"textAlign": "center", "color": "blue", "fontSize": 30},
+        html.H1(
+            "Kas geriausiai atstovauja mano įsitikinimus Seime?",
+            className="text-center mb-4",
         ),
-        html.Div(
-            className="row",
-            children=[
-                dcc.RadioItems(
-                    options=["pop", "lifeExp", "gdpPercap"],
-                    value="lifeExp",
-                    inline=True,
-                    id="my-radio-buttons-final",
-                )
-            ],
+        # Generate 10 sections of question and buttons
+        question_elements[0],
+        question_elements[1],
+        question_elements[2],
+        question_elements[3],
+        question_elements[4],
+        question_elements[5],
+        question_elements[6],
+        question_elements[7],
+        question_elements[8],
+        question_elements[9],
+        # Submit button
+        dbc.Row(
+            dbc.Col(
+                dbc.Button("Submit", color="primary", size="lg", className="mt-4 mb-3"),
+                width="auto",
+            ),
+            justify="center",  # Center the row
         ),
-        html.Div(
-            className="row",
-            children=[
-                html.Div(
-                    className="six columns",
-                    children=[
-                        dash_table.DataTable(
-                            data=df.to_dict("records"),
-                            page_size=11,
-                            style_table={"overflowX": "auto"},
-                        )
-                    ],
-                ),
-                html.Div(
-                    className="six columns",
-                    children=[dcc.Graph(figure={}, id="histo-chart-final")],
-                ),
-            ],
-        ),
-    ]
+    ],
+    fluid=True,
+    className="text-center",
+    style={"padding-top": "100px"},
 )
 
 # Run the app
