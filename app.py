@@ -3,8 +3,12 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 
-app = Dash("opa", external_stylesheets=[dbc.themes.LUX])
+app_name = "RenkuProtingai.lt"
+app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
+app.title = app_name
 server = app.server
+
+html.Div([html.Link(rel="icon", href="/assets/favicon.ico")])
 
 question_elements = [
     html.Div(
@@ -13,15 +17,21 @@ question_elements = [
             dbc.Row(
                 [
                     dbc.Col(
-                        dbc.Button("Už", color="success", className="me-1"),
+                        dbc.Button(
+                            "Už", color="success", outline=True, className="me-1"
+                        ),
                         width="auto",
                     ),
                     dbc.Col(
-                        dbc.Button("Prieš", color="danger", className="me-1"),
+                        dbc.Button(
+                            "Prieš", color="danger", outline=True, className="me-1"
+                        ),
                         width="auto",
                     ),
                     dbc.Col(
-                        dbc.Button("Man nesvarbu", color="info", className="me-1"),
+                        dbc.Button(
+                            "Man nesvarbu", color="info", outline=True, className="me-1"
+                        ),
                         width="auto",
                     ),
                 ],
@@ -53,7 +63,9 @@ app.layout = dbc.Container(
         # Submit button
         dbc.Row(
             dbc.Col(
-                dbc.Button("Submit", color="primary", size="lg", className="mt-4 mb-3"),
+                dbc.Button(
+                    "🥁Paskaičiuoti", color="primary", size="lg", className="mt-4 mb-3"
+                ),
                 width="auto",
             ),
             justify="center",  # Center the row
@@ -61,7 +73,7 @@ app.layout = dbc.Container(
     ],
     fluid=True,
     className="text-center",
-    style={"padding-top": "100px"},
+    style={"padding-top": "150px"},
 )
 
 # Run the app
