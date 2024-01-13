@@ -23,7 +23,7 @@ function generateJSONFromTable() {
     }
 
     var member = {
-      'Seimo narys(-ė)': cols[0].innerText.trim(),
+      mp_name: cols[0].innerText.trim(),
       vote: vote,
     };
     data.push(member);
