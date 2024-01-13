@@ -13,12 +13,14 @@ from dash import (
 import dash_bootstrap_components as dbc
 import json
 from enum import Enum
-from constants import question_contents
+from constants import question_contents, mp_to_fraction_map, party_color_codes
 
 app_name = "RenkuProtingai.lt"
 app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
 app.title = app_name
 server = app.server
+
+question_contents = question_contents
 
 
 class AnswerOptions(Enum):
@@ -177,14 +179,48 @@ def get_selected_option_per_question(array_of_options_per_question):
 
 
 def calculate_similarity_scores(question_contents):
-    # Placeholder function - replace with actual logic to calculate similarity
-    # This should return a list of dicts with 'name', 'similarity', and 'color' for each MP
-    return [
-        {"name": "MP1", "similarity": 0.8, "color": "red"},
-        {"name": "MP2", "similarity": 0.5, "color": "blue"},
-        {"name": "MP3", "similarity": 0.3, "color": "green"},
-        # ... other MPs
+    mp_names = mp_to_fraction_map.keys()
+    mp_results = {
+        mp_name: {
+            "mp_name": mp_name,
+            "party": party,
+            "identical_votes": 0,
+        }
+        for mp_name, party in mp_to_fraction_map.items()
+    }
+
+    voter_relevant_questions = [
+        question
+        for question in question_contents
+        if question["user_selected_answer"] != AnswerOptions.DONTCARE.value
     ]
+
+    for question in voter_relevant_questions:
+        mp_votes_for_this_question = question["votes"]
+        user_selected_answer = question["user_selected_answer"]
+
+        for mp_vote_for_one_question in mp_votes_for_this_question:
+            mp_name = mp_vote_for_one_question["mp_name"]
+
+            if user_selected_answer == mp_vote_for_one_question["vote"]:
+                mp_results[mp_name]["identical_votes"] += 1
+
+    number_of_relevant_questions = len(voter_relevant_questions)
+    mp_results_list = mp_results.values()
+    for mp_result in mp_results_list:
+        mp_result["similarity"] = (
+            (mp_result["identical_votes"] / number_of_relevant_questions)
+            if number_of_relevant_questions != 0
+            else 0.0
+        )
+        mp_result["color"] = party_color_codes[mp_result["party"]]
+        mp_result["mp_name"] = f"{mp_result['mp_name']} ({mp_result['party']})"
+
+    mp_results_list = sorted(
+        mp_results_list, key=lambda mp: mp["similarity"], reverse=True
+    )
+    print(mp_results_list)
+    return mp_results_list
 
 
 @app.callback(
@@ -215,13 +251,11 @@ def update_output(n_clicks, button_outlines):
             "user_selected_answer"
         ] = selected_option_per_question
 
-    # TODO - pick most similar MP
     mps = calculate_similarity_scores(question_contents)
 
-    # Render MPs as rounded boxes
     return [
         html.Div(
-            mp["name"],
+            mp["mp_name"],
             style={
                 "background-color": mp["color"],
                 "border-radius": "15px",
