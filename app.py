@@ -31,62 +31,60 @@ html.Div([html.Link(rel="icon", href="/assets/favicon.ico")])
 
 
 question_elements = [
-    html.Div(
-        [
-            html.H6(
-                f"{question_id+1}. {question['motion_title_for_questionaire']}",
-                className="mt-3",
-            ),
-            dbc.Row(
+    dbc.Row(
+        dbc.Col(
+            html.Div(
                 [
-                    dbc.Col(
-                        dbc.Button(
-                            "Už",
-                            id={
-                                "type": "answer-button",
-                                "index": question_id,
-                                "value": AnswerOptions.FOR.value,
-                            },
-                            color="success",
-                            outline=True,
-                            className="me-1",
-                        ),
-                        width="auto",
+                    html.H6(
+                        f"{question_id+1}. {question['motion_title_for_questionaire']}",
+                        className="mt-3",
                     ),
-                    dbc.Col(
-                        dbc.Button(
-                            "Prieš",
-                            id={
-                                "type": "answer-button",
-                                "index": question_id,
-                                "value": AnswerOptions.AGAINST.value,
-                            },
-                            color="danger",
-                            outline=True,
-                            className="me-1",
-                        ),
-                        width="auto",
-                    ),
-                    dbc.Col(
-                        dbc.Button(
-                            "Man nesvarbu",
-                            id={
-                                "type": "answer-button",
-                                "index": question_id,
-                                "value": AnswerOptions.DONTCARE.value,
-                            },
-                            color="info",
-                            outline=True,
-                            className="me-1",
-                        ),
-                        width="auto",
+                    html.Div(
+                        [
+                            dbc.Button(
+                                "Už",
+                                id={
+                                    "type": "answer-button",
+                                    "index": question_id,
+                                    "value": AnswerOptions.FOR.value,
+                                },
+                                color="success",
+                                outline=True,
+                                className="mb-2",
+                            ),
+                            dbc.Button(
+                                "Prieš",
+                                id={
+                                    "type": "answer-button",
+                                    "index": question_id,
+                                    "value": AnswerOptions.AGAINST.value,
+                                },
+                                color="danger",
+                                outline=True,
+                                className="mb-2",
+                            ),
+                            dbc.Button(
+                                "Man nesvarbu",
+                                id={
+                                    "type": "answer-button",
+                                    "index": question_id,
+                                    "value": AnswerOptions.DONTCARE.value,
+                                },
+                                color="info",
+                                outline=True,
+                                className="mb-4",
+                            ),
+                        ],
+                        className="d-grid gap-2 col-6 mx-auto",
                     ),
                 ],
-                justify="center",
-                className="mb-2",
+                id=f"question_id_{question_id}",
             ),
-        ],
-        id=f"question_id_{question_id}",
+            md=12,
+            xl=6,
+        ),
+        justify="center",
+        className="g-2",
     )
     for question_id, question in enumerate(question_contents)
 ]
@@ -114,7 +112,7 @@ app.layout = dbc.Container(
         dbc.Row(
             dbc.Col(
                 html.Div(id="output-container"),
-                width="auto",
+                width=8,
             ),
             justify="center",
         ),
@@ -178,6 +176,17 @@ def get_selected_option_per_question(array_of_options_per_question):
     return None
 
 
+def calculate_similarity_scores(question_contents):
+    # Placeholder function - replace with actual logic to calculate similarity
+    # This should return a list of dicts with 'name', 'similarity', and 'color' for each MP
+    return [
+        {"name": "MP1", "similarity": 0.8, "color": "red"},
+        {"name": "MP2", "similarity": 0.5, "color": "blue"},
+        {"name": "MP3", "similarity": 0.3, "color": "green"},
+        # ... other MPs
+    ]
+
+
 @app.callback(
     Output("output-container", "children"),
     [Input("submit-button", "n_clicks")],
@@ -207,7 +216,24 @@ def update_output(n_clicks, button_outlines):
         ] = selected_option_per_question
 
     # TODO - pick most similar MP
-    return f"{question_contents}"
+    mps = calculate_similarity_scores(question_contents)
+
+    # Render MPs as rounded boxes
+    return [
+        html.Div(
+            mp["name"],
+            style={
+                "background-color": mp["color"],
+                "border-radius": "15px",
+                "width": f'{max(mp["similarity"] * 100, 10)}%',  # Ensure a minimum width of 10%
+                "min-width": "100px",  # Or any other suitable minimum width
+                "padding": "10px",
+                "margin-bottom": "10px",
+                "text-align": "center",
+            },
+        )
+        for mp in mps
+    ]
 
 
 # Run the app
