@@ -2,7 +2,7 @@
 
 Thiis is an open-source Data Science project that analyses the behaviour of Lithuanian MPs.
 
-[👉 Check out live demo](https://seimas-fe1e862a3ff9.herokuapp.com/)
+[👉 Check out live demo](http://renkuprotingai.lt/)
 
 # Prerequisites
 

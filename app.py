@@ -1,3 +1,6 @@
+import pandas as pd
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 from dash import (
     Dash,
     html,
@@ -9,6 +12,7 @@ from dash import (
     MATCH,
     State,
     ALL,
+    ClientsideFunction,
 )
 import dash_bootstrap_components as dbc
 import json
@@ -116,6 +120,47 @@ app.layout = dbc.Container(
             ),
             justify="center",
         ),
+        # Hidden div to trigger clientside callback
+        html.Div(id="clientside-script-trigger", style={"display": "none"}),
+        html.Footer(
+            html.Div(
+                [
+                    html.A(
+                        [
+                            html.I(className="fab fa-linkedin footer-icon"),
+                            "Simonas",
+                        ],
+                        href="https://www.linkedin.com/in/simonas-mulevicius/",
+                        target="_blank",
+                    ),
+                    html.A(
+                        [
+                            html.I(className="fab fa-linkedin footer-icon"),
+                            "Mykolas",
+                        ],
+                        href="https://de.linkedin.com/in/mykolas-sveistrys",
+                        target="_blank",
+                    ),
+                    html.A(
+                        [
+                            html.I(className="fab fa-github footer-icon"),
+                            "GitHub Repository",
+                        ],
+                        href="https://github.com/zemaitistrys/seimas",
+                        target="_blank",
+                    ),
+                    html.A(
+                        [
+                            html.I(className="fas fa-database footer-icon"),
+                            "Duomenys",
+                        ],
+                        href="http://www.lrs.lt",
+                        target="_blank",
+                    ),
+                ],
+                className="footer",
+            )
+        ),
     ],
     fluid=True,
     className="text-center",
@@ -222,6 +267,75 @@ def calculate_similarity_scores(question_contents):
     return mp_results_list
 
 
+def calculate_average_similarity_score_per_fraction(mps):
+    df = pd.DataFrame(mps)
+
+    average_similarity = {
+        k: round(v, 2)
+        for k, v in sorted(
+            df.groupby("party")["similarity_percent"].mean().items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+    }
+
+    return average_similarity
+
+
+def generate_fraction_similarity_diagram(mps):
+    average_similarity_score_per_fraction = (
+        calculate_average_similarity_score_per_fraction(mps)
+    )
+
+    # Create a figure with subplots
+    fig = make_subplots(rows=1, cols=1)
+
+    fig.add_trace(
+        go.Bar(
+            x=list(average_similarity_score_per_fraction.keys()),
+            y=list(average_similarity_score_per_fraction.values()),
+            marker_color=[
+                party_color_codes[fraction_name]
+                for fraction_name in average_similarity_score_per_fraction.keys()
+            ],
+            name="Panašumas pagal frakciją",
+        )
+    )
+
+    # Update the layout
+    fig.update_layout(
+        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
+        xaxis_title="Frakcija",
+        yaxis_title="Panašumas (0-100%)",
+        barmode="group",
+    )
+    return fig
+
+
+def generate_most_similar_mps_diagram(mps):
+    mps = mps[:5]
+    # Create a figure with subplots
+    fig = make_subplots(rows=1, cols=1)
+
+    fig.add_trace(
+        go.Bar(
+            x=[mp["mp_name"] for mp in mps],
+            y=[mp["similarity_percent"] for mp in mps],
+            marker_color=[mp["color"] for mp in mps],
+            name="Panašumas pagal frakciją",
+        )
+    )
+
+    # Update the layout
+    fig.update_layout(
+        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
+        xaxis_title="Frakcija",
+        yaxis_title="Panašumas (0-100%)",
+        barmode="group",
+    )
+    return fig
+
+
 @app.callback(
     Output("output-container", "children"),
     [Input("submit-button", "n_clicks")],
@@ -251,23 +365,33 @@ def update_output(n_clicks, button_outlines):
         ] = selected_option_per_question
 
     mps = calculate_similarity_scores(question_contents)
-
+    fraction_similarity_diagram = generate_fraction_similarity_diagram(mps)
+    most_similar_mps_diagram = generate_most_similar_mps_diagram(mps)
     return [
         html.Div(
-            mp["mp_name"],
-            style={
-                "background-color": mp["color"],
-                "border-radius": "15px",
-                "width": f'{max(mp["similarity_percent"], 10)}%',  # Ensure a minimum width of 10%
-                "min-width": "100px",  # Or any other suitable minimum width
-                "max-width": "1000px",  # Or any other suitable minimum width
-                "padding": "10px",
-                "margin-bottom": "10px",
-                "text-align": "center",
-            },
-        )
-        for mp in mps
+            [
+                html.H1("Mano įsitikinimams panašiausia frakcija"),
+                dcc.Graph(figure=fraction_similarity_diagram),
+                html.H1("TOP 5 panašiausiai balsuojantys Seimo nariai"),
+                dcc.Graph(figure=most_similar_mps_diagram),
+            ]
+        ),
+        html.Script(
+            """
+            setTimeout(function() {
+                window.scrollTo(0, document.body.scrollHeight);
+            }, 1500);
+        """
+        ),
     ]
+
+
+# Clientside callback to scroll to the bottom
+app.clientside_callback(
+    ClientsideFunction(namespace="clientside", function_name="scrollToBottom"),
+    Output("clientside-script-trigger", "children"),
+    [Input("submit-button", "n_clicks")],
+)
 
 
 # Run the app
