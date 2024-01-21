@@ -317,33 +317,18 @@ def update_output(n_clicks, button_outlines):
         calculate_average_similarity_score_per_fraction(mps)
     )
 
-    # FUTURE TODO - deleteme?
-    # return [
-    #     html.Div(
-    #         mp["mp_name"],
-    #         style={
-    #             "background-color": mp["color"],
-    #             "border-radius": "15px",
-    #             "width": f'{max(mp["similarity_percent"], 10)}%',  # Ensure a minimum width of 10%
-    #             "min-width": "100px",  # Or any other suitable minimum width
-    #             "max-width": "1000px",  # Or any other suitable minimum width
-    #             "padding": "10px",
-    #             "margin-bottom": "10px",
-    #             "text-align": "center",
-    #         },
-    #     )
-    #     for mp in mps
-    # ]
-
     # Create a figure with subplots
     fig = make_subplots(rows=1, cols=1)
 
-    # Add savings data
     fig.add_trace(
         go.Bar(
             x=list(average_similarity_score_per_fraction.keys()),
             y=list(average_similarity_score_per_fraction.values()),
-            name="Household savings",
+            marker_color=[
+                party_color_codes[fraction_name]
+                for fraction_name in average_similarity_score_per_fraction.keys()
+            ],
+            name="Panašumas pagal frakciją",
         )
     )
 
