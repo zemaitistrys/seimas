@@ -24,8 +24,6 @@ app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
 app.title = app_name
 server = app.server
 
-question_contents = question_contents[:3]
-
 
 class AnswerOptions(Enum):
     FOR = "for"
@@ -284,6 +282,60 @@ def calculate_average_similarity_score_per_fraction(mps):
     return average_similarity
 
 
+def generate_fraction_similarity_diagram(mps):
+    average_similarity_score_per_fraction = (
+        calculate_average_similarity_score_per_fraction(mps)
+    )
+
+    # Create a figure with subplots
+    fig = make_subplots(rows=1, cols=1)
+
+    fig.add_trace(
+        go.Bar(
+            x=list(average_similarity_score_per_fraction.keys()),
+            y=list(average_similarity_score_per_fraction.values()),
+            marker_color=[
+                party_color_codes[fraction_name]
+                for fraction_name in average_similarity_score_per_fraction.keys()
+            ],
+            name="Panašumas pagal frakciją",
+        )
+    )
+
+    # Update the layout
+    fig.update_layout(
+        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
+        xaxis_title="Frakcija",
+        yaxis_title="Panašumas (0-100%)",
+        barmode="group",
+    )
+    return fig
+
+
+def generate_most_similar_mps_diagram(mps):
+    mps = mps[:5]
+    # Create a figure with subplots
+    fig = make_subplots(rows=1, cols=1)
+
+    fig.add_trace(
+        go.Bar(
+            x=[mp["mp_name"] for mp in mps],
+            y=[mp["similarity_percent"] for mp in mps],
+            marker_color=[mp["color"] for mp in mps],
+            name="Panašumas pagal frakciją",
+        )
+    )
+
+    # Update the layout
+    fig.update_layout(
+        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
+        xaxis_title="Frakcija",
+        yaxis_title="Panašumas (0-100%)",
+        barmode="group",
+    )
+    return fig
+
+
 @app.callback(
     Output("output-container", "children"),
     [Input("submit-button", "n_clicks")],
@@ -313,42 +365,22 @@ def update_output(n_clicks, button_outlines):
         ] = selected_option_per_question
 
     mps = calculate_similarity_scores(question_contents)
-    average_similarity_score_per_fraction = (
-        calculate_average_similarity_score_per_fraction(mps)
-    )
-
-    # Create a figure with subplots
-    fig = make_subplots(rows=1, cols=1)
-
-    fig.add_trace(
-        go.Bar(
-            x=list(average_similarity_score_per_fraction.keys()),
-            y=list(average_similarity_score_per_fraction.values()),
-            marker_color=[
-                party_color_codes[fraction_name]
-                for fraction_name in average_similarity_score_per_fraction.keys()
-            ],
-            name="Panašumas pagal frakciją",
-        )
-    )
-
-    # Update the layout
-    fig.update_layout(
-        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
-        xaxis_title="Frakcija",
-        yaxis_title="Panašumas (0-100%)",
-        barmode="group",
-    )
-
+    fraction_similarity_diagram = generate_fraction_similarity_diagram(mps)
+    most_similar_mps_diagram = generate_most_similar_mps_diagram(mps)
     return [
         html.Div(
-            [html.H1("Mano įsitikinimams panašiausia frakcija"), dcc.Graph(figure=fig)]
+            [
+                html.H1("Mano įsitikinimams panašiausia frakcija"),
+                dcc.Graph(figure=fraction_similarity_diagram),
+                html.H1("TOP 5 panašiausiai balsuojantys Seimo nariai"),
+                dcc.Graph(figure=most_similar_mps_diagram),
+            ]
         ),
         html.Script(
             """
             setTimeout(function() {
                 window.scrollTo(0, document.body.scrollHeight);
-            }, 1000);
+            }, 1500);
         """
         ),
     ]
