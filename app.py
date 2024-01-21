@@ -20,8 +20,6 @@ app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
 app.title = app_name
 server = app.server
 
-question_contents = question_contents
-
 
 class AnswerOptions(Enum):
     FOR = "for"
@@ -208,18 +206,19 @@ def calculate_similarity_scores(question_contents):
     number_of_relevant_questions = len(voter_relevant_questions)
     mp_results_list = mp_results.values()
     for mp_result in mp_results_list:
-        mp_result["similarity"] = (
+        mp_result["similarity_percent"] = 100 * (
             (mp_result["identical_votes"] / number_of_relevant_questions)
             if number_of_relevant_questions != 0
             else 0.0
         )
         mp_result["color"] = party_color_codes[mp_result["party"]]
-        mp_result["mp_name"] = f"{mp_result['mp_name']} ({mp_result['party']})"
+        mp_result[
+            "mp_name"
+        ] = f"{mp_result['mp_name']} ({mp_result['party']}, {int(mp_result['similarity_percent'])}%)"
 
     mp_results_list = sorted(
-        mp_results_list, key=lambda mp: mp["similarity"], reverse=True
+        mp_results_list, key=lambda mp: mp["similarity_percent"], reverse=True
     )
-    print(mp_results_list)
     return mp_results_list
 
 
@@ -259,8 +258,9 @@ def update_output(n_clicks, button_outlines):
             style={
                 "background-color": mp["color"],
                 "border-radius": "15px",
-                "width": f'{max(mp["similarity"] * 100, 10)}%',  # Ensure a minimum width of 10%
+                "width": f'{max(mp["similarity_percent"], 10)}%',  # Ensure a minimum width of 10%
                 "min-width": "100px",  # Or any other suitable minimum width
+                "max-width": "1000px",  # Or any other suitable minimum width
                 "padding": "10px",
                 "margin-bottom": "10px",
                 "text-align": "center",
