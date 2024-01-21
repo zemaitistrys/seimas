@@ -1,3 +1,4 @@
+import pandas as pd
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from dash import (
@@ -23,7 +24,7 @@ app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
 app.title = app_name
 server = app.server
 
-# question_contents = question_contents[:3]
+question_contents = question_contents[:3]
 
 
 class AnswerOptions(Enum):
@@ -123,7 +124,6 @@ app.layout = dbc.Container(
         ),
         # Hidden div to trigger clientside callback
         html.Div(id="clientside-script-trigger", style={"display": "none"}),
-        # Footer
         html.Footer(
             html.Div(
                 [
@@ -270,11 +270,18 @@ def calculate_similarity_scores(question_contents):
 
 
 def calculate_average_similarity_score_per_fraction(mps):
-    # mps
-    # group by 'party'
-    # take average score of 'similarity_percent'
-    # TODO
-    return
+    df = pd.DataFrame(mps)
+
+    average_similarity = {
+        k: round(v, 2)
+        for k, v in sorted(
+            df.groupby("party")["similarity_percent"].mean().items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+    }
+
+    return average_similarity
 
 
 @app.callback(
@@ -328,45 +335,17 @@ def update_output(n_clicks, button_outlines):
     #     for mp in mps
     # ]
 
-    countries = [
-        "Switzerland",
-        "Sweden",
-        "Belgium",
-        "United States",
-        "Netherlands",
-        "Canada",
-        "United Kingdom",
-        "Japan",
-    ]
-    savings = [
-        17.52,
-        15.21,
-        7.51,
-        7.48,
-        6.51,
-        4.98,
-        2.26,
-        1.36,
-    ]  # This should be the household savings rates
-    net_worth = [
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    ]  # Replace None with actual net worth data if available
-
     # Create a figure with subplots
     fig = make_subplots(rows=1, cols=1)
 
     # Add savings data
-    fig.add_trace(go.Bar(x=countries, y=savings, name="Household savings"))
-
-    # Here you would add the net worth data as another bar trace, if you have that data
-    # fig.add_trace(go.Bar(x=countries, y=net_worth, name='Household net worth'))
+    fig.add_trace(
+        go.Bar(
+            x=list(average_similarity_score_per_fraction.keys()),
+            y=list(average_similarity_score_per_fraction.values()),
+            name="Household savings",
+        )
+    )
 
     # Update the layout
     fig.update_layout(
