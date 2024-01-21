@@ -21,6 +21,12 @@ pip install -r requirements.txt
 python app.py
 ```
 
+# How to deploy?
+```
+git push heroku main
+```
+
+
 ## Data Source and Provider
 
 - **Data Source:** [Lietuvos Respublikos Seimas](http://www.lrs.lt)
