@@ -1,3 +1,5 @@
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 from dash import (
     Dash,
     html,
@@ -9,6 +11,7 @@ from dash import (
     MATCH,
     State,
     ALL,
+    ClientsideFunction,
 )
 import dash_bootstrap_components as dbc
 import json
@@ -19,6 +22,8 @@ app_name = "RenkuProtingai.lt"
 app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
 app.title = app_name
 server = app.server
+
+# question_contents = question_contents[:3]
 
 
 class AnswerOptions(Enum):
@@ -115,6 +120,48 @@ app.layout = dbc.Container(
                 width=8,
             ),
             justify="center",
+        ),
+        # Hidden div to trigger clientside callback
+        html.Div(id="clientside-script-trigger", style={"display": "none"}),
+        # Footer
+        html.Footer(
+            html.Div(
+                [
+                    html.A(
+                        [
+                            html.I(className="fab fa-linkedin footer-icon"),
+                            "Simonas",
+                        ],
+                        href="https://www.linkedin.com/in/simonas-mulevicius/",
+                        target="_blank",
+                    ),
+                    html.A(
+                        [
+                            html.I(className="fab fa-linkedin footer-icon"),
+                            "Mykolas",
+                        ],
+                        href="https://de.linkedin.com/in/mykolas-sveistrys",
+                        target="_blank",
+                    ),
+                    html.A(
+                        [
+                            html.I(className="fab fa-github footer-icon"),
+                            "GitHub Repository",
+                        ],
+                        href="https://github.com/zemaitistrys/seimas",
+                        target="_blank",
+                    ),
+                    html.A(
+                        [
+                            html.I(className="fas fa-database footer-icon"),
+                            "Duomenys",
+                        ],
+                        href="http://www.lrs.lt",
+                        target="_blank",
+                    ),
+                ],
+                className="footer",
+            )
         ),
     ],
     fluid=True,
@@ -222,6 +269,14 @@ def calculate_similarity_scores(question_contents):
     return mp_results_list
 
 
+def calculate_average_similarity_score_per_fraction(mps):
+    # mps
+    # group by 'party'
+    # take average score of 'similarity_percent'
+    # TODO
+    return
+
+
 @app.callback(
     Output("output-container", "children"),
     [Input("submit-button", "n_clicks")],
@@ -251,23 +306,96 @@ def update_output(n_clicks, button_outlines):
         ] = selected_option_per_question
 
     mps = calculate_similarity_scores(question_contents)
+    average_similarity_score_per_fraction = (
+        calculate_average_similarity_score_per_fraction(mps)
+    )
+
+    # FUTURE TODO - deleteme?
+    # return [
+    #     html.Div(
+    #         mp["mp_name"],
+    #         style={
+    #             "background-color": mp["color"],
+    #             "border-radius": "15px",
+    #             "width": f'{max(mp["similarity_percent"], 10)}%',  # Ensure a minimum width of 10%
+    #             "min-width": "100px",  # Or any other suitable minimum width
+    #             "max-width": "1000px",  # Or any other suitable minimum width
+    #             "padding": "10px",
+    #             "margin-bottom": "10px",
+    #             "text-align": "center",
+    #         },
+    #     )
+    #     for mp in mps
+    # ]
+
+    countries = [
+        "Switzerland",
+        "Sweden",
+        "Belgium",
+        "United States",
+        "Netherlands",
+        "Canada",
+        "United Kingdom",
+        "Japan",
+    ]
+    savings = [
+        17.52,
+        15.21,
+        7.51,
+        7.48,
+        6.51,
+        4.98,
+        2.26,
+        1.36,
+    ]  # This should be the household savings rates
+    net_worth = [
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ]  # Replace None with actual net worth data if available
+
+    # Create a figure with subplots
+    fig = make_subplots(rows=1, cols=1)
+
+    # Add savings data
+    fig.add_trace(go.Bar(x=countries, y=savings, name="Household savings"))
+
+    # Here you would add the net worth data as another bar trace, if you have that data
+    # fig.add_trace(go.Bar(x=countries, y=net_worth, name='Household net worth'))
+
+    # Update the layout
+    fig.update_layout(
+        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
+        xaxis_title="Frakcija",
+        yaxis_title="Panašumas (0-100%)",
+        barmode="group",
+    )
 
     return [
         html.Div(
-            mp["mp_name"],
-            style={
-                "background-color": mp["color"],
-                "border-radius": "15px",
-                "width": f'{max(mp["similarity_percent"], 10)}%',  # Ensure a minimum width of 10%
-                "min-width": "100px",  # Or any other suitable minimum width
-                "max-width": "1000px",  # Or any other suitable minimum width
-                "padding": "10px",
-                "margin-bottom": "10px",
-                "text-align": "center",
-            },
-        )
-        for mp in mps
+            [html.H1("Mano įsitikinimams panašiausia frakcija"), dcc.Graph(figure=fig)]
+        ),
+        html.Script(
+            """
+            setTimeout(function() {
+                window.scrollTo(0, document.body.scrollHeight);
+            }, 1000);
+        """
+        ),
     ]
+
+
+# Clientside callback to scroll to the bottom
+app.clientside_callback(
+    ClientsideFunction(namespace="clientside", function_name="scrollToBottom"),
+    Output("clientside-script-trigger", "children"),
+    [Input("submit-button", "n_clicks")],
+)
 
 
 # Run the app
