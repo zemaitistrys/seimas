@@ -2090,4 +2090,4 @@ party_color_codes = {
 # mini test
 for question in question_contents:
     for vote in question["votes"]:
-        assert vote["mp_name"] in mp_to_fraction_map:
+        assert vote["mp_name"] in mp_to_fraction_map
