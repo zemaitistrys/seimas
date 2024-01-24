@@ -328,8 +328,8 @@ def generate_most_similar_mps_diagram(mps):
 
     # Update the layout
     fig.update_layout(
-        title="Panašumas tarp manęs ir kiekvienos šios kadencijos frakcijos (0-100%)",
-        xaxis_title="Frakcija",
+        title="Panašumas tarp manęs ir politiko(-ės) (0-100%)",
+        xaxis_title="Seimo narys(-ė)",
         yaxis_title="Panašumas (0-100%)",
         barmode="group",
     )
@@ -374,6 +374,28 @@ def update_output(n_clicks, button_outlines):
                 dcc.Graph(figure=fraction_similarity_diagram),
                 html.H1("TOP 5 panašiausiai balsuojantys Seimo nariai"),
                 dcc.Graph(figure=most_similar_mps_diagram),
+                dbc.Row(
+                    dbc.Col(
+                        html.Div(
+                            [
+                                html.P(
+                                    "TS-LKDF - Tėvynės sąjungos-Lietuvos krikščionių demokratų frakcija"
+                                ),
+                                html.P(
+                                    "LSDPF - Lietuvos socialdemokratų partijos frakcija"
+                                ),
+                                html.P(
+                                    "LVŽSF - Lietuvos valstiečių ir žaliųjų sąjungos frakcija"
+                                ),
+                                html.P("DFVL - Demokratų frakcija 'Vardan Lietuvos'"),
+                                html.P("LSF - Liberalų sąjūdžio frakcija"),
+                                html.P("DPF - Darbo partijos frakcija"),
+                                html.P("MG - Mišri Seimo narių grupė"),
+                                html.P("LF - Laisvės frakcija"),
+                            ]
+                        )
+                    )
+                ),
             ]
         ),
         html.Script(
