@@ -30,6 +30,16 @@ class AnswerOptions(Enum):
     AGAINST = "against"
     DONTCARE = "dontcare"
 
+FRACTION_KEY_TO_TITLE = {
+    "TS-LKDF": "Tėvynės sąjungos-Lietuvos krikščionių demokratų frakcija",
+    "LSDPF": "Lietuvos socialdemokratų partijos frakcija",
+    "LVŽSF": "Lietuvos valstiečių ir žaliųjų sąjungos frakcija",
+    "DFVL": "Demokratų frakcija 'Vardan Lietuvos'",
+    "LSF": "Liberalų sąjūdžio frakcija",
+    "DPF": "Darbo partijos frakcija",
+    "MG": "Mišri Seimo narių grupė",
+    "LF": "Laisvės frakcija",
+}
 
 html.Div([html.Link(rel="icon", href="/assets/favicon.ico")])
 
@@ -282,11 +292,7 @@ def calculate_average_similarity_score_per_fraction(mps):
     return average_similarity
 
 
-def generate_fraction_similarity_diagram(mps):
-    average_similarity_score_per_fraction = (
-        calculate_average_similarity_score_per_fraction(mps)
-    )
-
+def generate_fraction_similarity_diagram(average_similarity_score_per_fraction):
     # Create a figure with subplots
     fig = make_subplots(rows=1, cols=1)
 
@@ -365,33 +371,22 @@ def update_output(n_clicks, button_outlines):
         ] = selected_option_per_question
 
     mps = calculate_similarity_scores(question_contents)
-    fraction_similarity_diagram = generate_fraction_similarity_diagram(mps)
+    average_similarity_score_per_fraction = calculate_average_similarity_score_per_fraction(mps)
+    fraction_similarity_diagram = generate_fraction_similarity_diagram(average_similarity_score_per_fraction)
     most_similar_mps_diagram = generate_most_similar_mps_diagram(mps)
+    most_similar_fraction = max(average_similarity_score_per_fraction, key=average_similarity_score_per_fraction.get)
     return [
         html.Div(
             [
-                html.H1("Mano įsitikinimams panašiausia frakcija"),
+                html.H1(f"Mano įsitikinimams panašiausia: {FRACTION_KEY_TO_TITLE[most_similar_fraction]}"),
                 dcc.Graph(figure=fraction_similarity_diagram),
                 html.H1("TOP 5 panašiausiai balsuojantys Seimo nariai"),
                 dcc.Graph(figure=most_similar_mps_diagram),
                 dbc.Row(
                     dbc.Col(
                         html.Div(
-                            [
-                                html.P(
-                                    "TS-LKDF - Tėvynės sąjungos-Lietuvos krikščionių demokratų frakcija"
-                                ),
-                                html.P(
-                                    "LSDPF - Lietuvos socialdemokratų partijos frakcija"
-                                ),
-                                html.P(
-                                    "LVŽSF - Lietuvos valstiečių ir žaliųjų sąjungos frakcija"
-                                ),
-                                html.P("DFVL - Demokratų frakcija 'Vardan Lietuvos'"),
-                                html.P("LSF - Liberalų sąjūdžio frakcija"),
-                                html.P("DPF - Darbo partijos frakcija"),
-                                html.P("MG - Mišri Seimo narių grupė"),
-                                html.P("LF - Laisvės frakcija"),
+                            [ 
+                                html.P(f"{key} - {name}") for (key, name) in FRACTION_KEY_TO_TITLE.items()
                             ]
                         )
                     )
