@@ -19,7 +19,7 @@ import json
 from enum import Enum
 from constants import question_contents, mp_to_fraction_map, party_color_codes
 
-app_name = "RenkuProtingai.lt"
+app_name = "RenkuProtingai.lt !!!"
 app = Dash(app_name, external_stylesheets=[dbc.themes.LUX])
 app.title = app_name
 server = app.server
